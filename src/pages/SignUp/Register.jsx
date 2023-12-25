@@ -1,14 +1,39 @@
-import { StyleSheet, Text, ScrollView, Image, TextInput, View, TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, ScrollView, Image, TextInput, View, TouchableOpacity, Alert } from 'react-native'
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { myColors } from '../../utils/myColors';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { authentication } from '../../../FirebaseConfig';
 
 const Register = () => {
   const navigation = useNavigation();
   const [isVisible, setIsVisible] = useState(true);
+  const [userCrendetials, setUserCrendetials] = useState({
+    email: "",
+    password: "",
+  });
 
+  const { email, password } = userCrendetials;
+
+  const useAccount = () => {
+    createUserWithEmailAndPassword(authentication, email, password)
+      .then(() => {
+        Alert.alert('User account created & signed in!');
+      })
+      .catch(error => {
+        if (error.code === 'auth/email-already-in-use') {
+          Alert.alert('That email address is already in use!');
+        }
+
+        if (error.code === 'auth/invalid-email') {
+          Alert.alert('That email address is invalid!');
+        }
+
+        console.error(error);
+      });
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -31,6 +56,8 @@ const Register = () => {
           <Text style={styles.text}>Email</Text>
 
           <TextInput
+            value={email}
+            onChangeText={(val) => { setUserCrendetials({ ...userCrendetials, email: val }); }}
             placeholder='exemple@gmail.com'
             keyboardType='email-address'
             style={styles.input}
@@ -40,6 +67,8 @@ const Register = () => {
 
           <View style={styles.eye}>
             <TextInput
+              value={password}
+              onChangeText={(val) => { setUserCrendetials({ ...userCrendetials, password: val }); }}
               secureTextEntry={isVisible}
               placeholder='minimum 6 characters'
               keyboardType='ascii-capable'
@@ -56,7 +85,7 @@ const Register = () => {
             and Privacy Policy
           </Text>
 
-          <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.button}>
+          <TouchableOpacity onPress={useAccount} style={styles.button}>
             <Text style={styles.buttonText}>Sign Up</Text>
           </TouchableOpacity>
 
