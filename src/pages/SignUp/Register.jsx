@@ -5,22 +5,31 @@ import { myColors } from '../../utils/myColors';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { authentication } from '../../../FirebaseConfig';
+import { authentication, databese } from '../../../FirebaseConfig';
+import { doc, setDoc } from 'firebase/firestore';
+import uuid from 'react-native-uuid';
 
 const Register = () => {
   const navigation = useNavigation();
   const [isVisible, setIsVisible] = useState(true);
   const [userCrendetials, setUserCrendetials] = useState({
+    name: "",
     email: "",
     password: "",
   });
 
-  const { email, password } = userCrendetials;
+  const { email, password, name } = userCrendetials;
 
+  const uid = uuid.v4()
   const useAccount = () => {
     createUserWithEmailAndPassword(authentication, email, password)
       .then(() => {
-        Alert.alert('User account created & signed in!');
+        navigation.navigate('SignIn')
+        setDoc(doc(databese, 'users', uid), {
+          username: name,
+          email: email,
+          id: authentication.currentUser.uid
+        });
       })
       .catch(error => {
         if (error.code === 'auth/email-already-in-use') {
@@ -47,6 +56,8 @@ const Register = () => {
           <Text style={styles.text}>Username</Text>
 
           <TextInput
+            value={name}
+            onChangeText={(val) => { setUserCrendetials({ ...userCrendetials, name: val }); }}
             placeholder='enter your username'
             keyboardType='name-phone-pad'
             maxLength={10}
